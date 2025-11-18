@@ -1,0 +1,13 @@
+python3 generate_board.py -w 9 -h 14
+python3 generate_configurations.py board_20251013_133207.txt
+python3 combine_configurations.py configurations_20251013_133207.txt
+
+python3 generate_board.py -w 30 -h 16
+python3 pipeline.py board_20251013_141816.txt 
+python3 board_viewer.py solution_20251013_141816.txt
+
+---
+mobile game: 9x14
+pc game: 30x16
+
+
