@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minesweeper Solver - All-in-One</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .tabs {
+      display: flex;
+      background: #f3f4f6;
+      border-bottom: 1px solid #d1d5db;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: #6b7280;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab:hover {
+      background: #e5e7eb;
+    }
+
+    .tab.active {
+      color: #667eea;
+      background: white;
+      border-bottom-color: #667eea;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 30px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .input-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+
+    input[type="number"], input[type="text"] {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 8px 12px;
+      width: 100px;
+      font-size: 14px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+
+    .btn-success {
+      background: #10b981;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .pen-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pen-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      border: 2px solid #d1d5db;
+      background: white;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .pen-btn:hover {
+      border-color: #667eea;
+      background: #f3f4f6;
+    }
+
+    .pen-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .board-container {
+      display: inline-block;
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .board {
+      display: grid;
+      gap: 1px;
+      background: #9ca3af;
+      border: 2px solid #9ca3af;
+      user-select: none;
+    }
+
+    .cell {
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background 0.1s;
+    }
+
+    .cell:hover {
+      background: #f3f4f6;
+    }
+
+    .cell.empty {
+      background: #f9fafb;
+    }
+
+    .cell.mine {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    .cell.flag {
+      background: #fef3c7;
+      color: #f59e0b;
+    }
+
+    .cell.number {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .cell.thinking {
+      background: #fef9c3;
+      font-size: 18px;
+    }
+
+    .cell.safe {
+      background: #d1fae5;
+      font-size: 18px;
+    }
+
+    .cell.unsafe {
+      background: #fecaca;
+      font-size: 18px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .legend-symbol {
+      font-family: monospace;
+      font-weight: bold;
+      padding: 4px 8px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+    }
+
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    .alert-info {
+      background: #dbeafe;
+      border: 1px solid #3b82f6;
+      color: #1e40af;
+    }
+
+    .alert-success {
+      background: #d1fae5;
+      border: 1px solid #10b981;
+      color: #065f46;
+    }
+
+    .alert-warning {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+    }
+
+    .alert-error {
+      background: #fee2e2;
+      border: 1px solid #ef4444;
+      color: #991b1b;
+    }
+
+    .game-history {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+
+    .history-item {
+      padding: 10px;
+      background: white;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .history-item:hover {
+      background: #f3f4f6;
+      transform: translateX(5px);
+    }
+
+    .history-time {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .history-btn {
+      padding: 5px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #e5e7eb;
+      color: #374151;
+      transition: all 0.2s;
+    }
+
+    .history-btn:hover {
+      background: #d1d5db;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+      text-transform: uppercase;
+    }
+
+    .spinner {
+      border: 3px solid #f3f4f6;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 768px) {
+      .two-column {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Toast Notification Styles */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: white;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 400px;
+      pointer-events: all;
+      transform: translateX(400px);
+      opacity: 0;
+      transition: all 0.3s ease-out;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .toast.hide {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+
+    .toast-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .toast-content {
+      flex: 1;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .toast-message {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .toast-close {
+      cursor: pointer;
+      color: #9ca3af;
+      font-size: 20px;
+      line-height: 1;
+      padding: 0 4px;
+      transition: color 0.2s;
+    }
+
+    .toast-close:hover {
+      color: #374151;
+    }
+
+    .toast.success {
+      border-left: 4px solid #10b981;
+    }
+
+    .toast.error {
+      border-left: 4px solid #ef4444;
+    }
+
+    .toast.info {
+      border-left: 4px solid #3b82f6;
+    }
+
+    .toast.warning {
+      border-left: 4px solid #f59e0b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>💣 Minesweeper Solver</h1>
+      <p class="subtitle">Find the best next move with AI-powered configuration analysis</p>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="editor">📝 Editor</div>
+      <div class="tab" data-tab="solver">🔍 Solver</div>
+      <div class="tab" data-tab="viewer">👁️ Viewer</div>
+      <div class="tab" data-tab="history">📚 History</div>
+    </div>
+
+    <!-- EDITOR TAB -->
+    <div class="tab-content active" id="editor">
+      <div class="section">
+        <h2 class="section-title">Board Editor</h2>
+
+        <div class="controls">
+          <div class="input-group">
+            <label>Rows</label>
+            <input type="number" id="rows" min="1" max="30" value="10">
+          </div>
+          <div class="input-group">
+            <label>Columns</label>
+            <input type="number" id="cols" min="1" max="30" value="10">
+          </div>
+          <button class="btn" id="createBoard">Create Board</button>
+          <button class="btn btn-secondary" id="clearBoard">Clear Board</button>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="legend-symbol">.</span> Empty</div>
+          <div class="legend-item"><span class="legend-symbol">?</span> Unknown</div>
+          <div class="legend-item"><span class="legend-symbol">!</span> Mine</div>
+          <div class="legend-item"><span class="legend-symbol">0-8</span> Number</div>
+        </div>
+
+        <div class="pen-buttons" id="penButtons"></div>
+
+        <div style="margin-top: 20px;">
+          <div class="board-container">
+            <div class="board" id="editorBoard"></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button class="btn btn-success" id="saveToSolver">Save & Go to Solver →</button>
+          <button class="btn btn-secondary" id="downloadBoard">Download as File</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOLVER TAB -->
+    <div class="tab-content" id="solver">
+      <div class="section">
+        <h2 class="section-title">Solve Minesweeper</h2>
+
+        <div class="alert alert-info">
+          <strong>How it works:</strong> The solver analyzes your board, generates all valid mine configurations,
+          and identifies cells that are definitely safe (👍), definitely mines (👎), or uncertain (🤔).
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="loadFromEditor">Load from Editor</button>
+          <button class="btn btn-secondary" id="loadFromFile">Load from File</button>
+          <button class="btn btn-success" id="solveBoard">🔍 Solve Board</button>
+        </div>
+
+        <div class="two-column">
+          <div>
+            <h3 style="margin-bottom: 10px;">Input Board</h3>
+            <textarea id="inputBoard" placeholder="Paste or load your board here..."></textarea>
+          </div>
+          <div>
+            <h3 style="margin-bottom: 10px;">Solution</h3>
+            <textarea id="outputBoard" placeholder="Solution will appear here..." readonly></textarea>
+          </div>
+        </div>
+
+        <div id="solverStats" class="stats hidden">
+          <div class="stat-card">
+            <div class="stat-value" id="statOutline">0</div>
+            <div class="stat-label">Outline Cells</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statClusters">0</div>
+            <div class="stat-label">Clusters</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statConfigs">0</div>
+            <div class="stat-label">Configurations</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statSafe">0</div>
+            <div class="stat-label">Safe Cells</div>
+          </div>
+        </div>
+
+        <div id="solverProgress" class="hidden">
+          <div class="spinner"></div>
+          <p style="text-align: center; color: #6b7280;">Analyzing configurations...</p>
+        </div>
+
+        <div id="solverResult" class="hidden">
+          <button class="btn" id="viewSolution">View Solution →</button>
+          <button class="btn btn-secondary" id="saveToHistory">Save to History</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEWER TAB -->
+    <div class="tab-content" id="viewer">
+      <div class="section">
+        <h2 class="section-title">Board Viewer</h2>
+
+        <div class="legend">
+          <div class="legend-item"><span class="legend-symbol">.</span> Empty</div>
+          <div class="legend-item"><span class="legend-symbol">!</span> 💣 Mine</div>
+          <div class="legend-item"><span class="legend-symbol">?</span> ❓ Unknown</div>
+          <div class="legend-item"><span class="legend-symbol">0-8</span> Number</div>
+          <div class="legend-item"><span class="legend-symbol">#</span> 🤔 Uncertain</div>
+          <div class="legend-item"><span class="legend-symbol">o</span> 👍 Safe</div>
+          <div class="legend-item"><span class="legend-symbol">x</span> 👎 Mine</div>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="loadSolution">Load Solution</button>
+          <button class="btn btn-secondary" id="loadCustomBoard">Load Custom Board</button>
+        </div>
+
+        <textarea id="viewerInput" placeholder="Paste board data here..."></textarea>
+
+        <div style="margin-top: 20px;">
+          <div class="board-container">
+            <div class="board" id="viewerBoard"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="tab-content" id="history">
+      <div class="section">
+        <h2 class="section-title">Game History</h2>
+
+        <div class="controls">
+          <button class="btn btn-success" id="exportHistory">Export All</button>
+          <button class="btn btn-danger" id="clearHistory">Clear History</button>
+        </div>
+
+        <div class="game-history" id="historyList">
+          <p style="text-align: center; color: #6b7280;">No saved games yet. Solve some boards to build your history!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="minesweeper-solver.js"></script>
+</body>
+</html>
+

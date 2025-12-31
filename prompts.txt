@@ -1,0 +1,36 @@
+read the files and scripts (code + comments) in this project in order to understand it, it's a set of tools to help the player find the best next move in the minesweeper game.
+
+the usual workflow is as follows:
+
+- the user generates an empty board (provides the dimensions) as a text file and fills out (initially filled with dots) or graphically using the "Minesweeper Board Editor" (minesweeper-editor.html) then downloading the finished board as a text file
+- the user then generates all the possible valid configurations given the current board while respecting the constraints of the revealed cells (number of adjacent mines) -> generate_configurations.py is an optimized version of generate_configurations_brute_force.py (kept for reference)
+- then, the user should combine the valid configurations found, in the previous step, in one board: if the cell's stays the same in all configurations (always a mine or always safe), it is marked as such, otherwise it is marked as unknown; this will give the user a better idea of where to click next
+- finally, the user can visualize the resulting board using board_viewer.py if he wants to see the result on the console or using the minesweeper-viewer.html web page
+
+(alternatively, the user can launch the pipeline script instead of the configuration generation + combination steps, which will do both in one go)
+
+also, take a look at the archive/ folder, it contains previous runs (boards: board_yyyymmdd_hhmmss.txt, configurations: configurations_yyyymmdd_hhmmss.txt, solutions: solution_yyyymmdd_hhmmss.txt) that can be used for testing or reference
+
+once understood, document the project with makrdown files and generate a webapp to make it even easier to use the best next step finder, i.e. to avoid going back and forth between the console and the web pages
+
+- the webapp should allow the user to easily generate boards, find the combined configurations board (next step plan) and save the evolution of the board per game and can be exported
+
+---
+
+when saving a board to history, instead of an alert, i want a notification popup that disappears automatically after a while, this is going to be a better experience than a blocking alert waiting for me to press ok!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

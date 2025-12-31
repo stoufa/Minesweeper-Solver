@@ -1,0 +1,38 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                   MINESWEEPER SOLVER                              ║
+║                   HOW TO GET STARTED                              ║
+╚═══════════════════════════════════════════════════════════════════╝
+🚀 FASTEST WAY TO START (30 seconds):
+1. Open this file in your browser:
+   → minesweeper-solver.html
+2. You'll see 4 tabs:
+   📝 Editor  - Create your board
+   🔍 Solver  - Find safe moves
+   👁️ Viewer  - See results
+   📚 History - Track games
+3. Try it:
+   • Go to Editor → Draw a simple board
+   • Go to Solver → Click "Solve Board"
+   • See which cells are safe! 👍
+Done! You're solving Minesweeper! 🎉
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📖 WANT TO LEARN MORE?
+Read these files in order:
+1. START_HERE.md      ← Begin here!
+2. QUICKSTART.md      ← 5-minute tutorial
+3. WEBAPP.md          ← Master the web app
+4. INDEX.md           ← Find anything else
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💻 PREFER COMMAND LINE?
+python3 pipeline.py --latest
+python3 board_viewer.py solution_*.txt
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❓ WHAT THIS DOES:
+Tells you which Minesweeper cells are:
+  👍 Safe to click
+  👎 Definitely mines
+  🤔 Uncertain (need more info)
+100% accurate, no guessing needed!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ That's it! Open minesweeper-solver.html and start winning! ✨
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
