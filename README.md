@@ -257,16 +257,43 @@ python board_viewer.py solution_20251231_120000.txt
 
 ## 🌐 Web Interface
 
-A unified web application is available that combines all functionality:
+A unified web application (`minesweeper-solver.html`) is available that combines all functionality:
 
 **Features:**
-- Board creation and editing
+- Board creation and editing with Visual Grid Editor
+- Upload/paste screenshots and convert them to boards
 - One-click configuration generation and solving
-- Save and load game history
+- Probability calculations for uncertain cells
+- Save and load game history with timeline view
 - Export results
+- Dark theme enabled by default
 - No command-line required!
 
-See `WEBAPP.md` for details or open `webapp/index.html`.
+### Running the Web App
+
+To avoid CORS issues, use the included server scripts instead of opening the HTML file directly:
+
+```bash
+# Option 1: Python script (recommended)
+python3 serve.py
+
+# Option 2: Bash script
+./serve.sh
+
+# Option 3: Custom port
+python3 serve.py 3000
+```
+
+Then open your browser to: **http://localhost:8000/minesweeper-solver.html**
+
+See `SERVER_GUIDE.md` for detailed instructions.
+
+### Legacy Tools
+
+- `minesweeper-editor.html` - Standalone board editor
+- `minesweeper-viewer.html` - Standalone board viewer
+
+**Note:** The unified webapp (`minesweeper-solver.html`) is recommended for the best experience.
 
 ## 📁 Archive
 

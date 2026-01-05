@@ -43,6 +43,13 @@
    - Integration examples
    - Error handling
 
+6. **[CHANGELOG.md](CHANGELOG.md)** - Version history 📝 ✨ NEW!
+   - All changes and updates
+   - Bug fixes
+   - New features
+   - Breaking changes
+   - Release notes
+
 ---
 
 ## 🚀 Quick Links

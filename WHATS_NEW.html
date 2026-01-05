@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What's New - Minesweeper Solver v2.0</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e4e4e7;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #16213e;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid #3f3f46;
+    }
+
+    h1 {
+      color: #667eea;
+      font-size: 36px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .version {
+      text-align: center;
+      color: #a1a1aa;
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      color: #667eea;
+      font-size: 24px;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #3f3f46;
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      color: #93c5fd;
+      font-size: 20px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    .feature {
+      background: #27272a;
+      border-left: 4px solid #667eea;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+    }
+
+    .feature-title {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: #fcd34d;
+    }
+
+    .feature-desc {
+      color: #a1a1aa;
+      margin-bottom: 8px;
+    }
+
+    .feature-test {
+      background: #0f3460;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 14px;
+      border: 1px solid #3f3f46;
+    }
+
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 30px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 18px;
+      margin: 20px 10px;
+      transition: transform 0.2s;
+      text-align: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #52525b;
+    }
+
+    .emoji {
+      font-size: 24px;
+      margin-right: 8px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    li {
+      margin-bottom: 8px;
+      color: #d4d4d8;
+    }
+
+    code {
+      background: #27272a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      color: #fcd34d;
+      border: 1px solid #3f3f46;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .status.fixed {
+      background: #064e3b;
+      color: #6ee7b7;
+    }
+
+    .status.new {
+      background: #1e3a8a;
+      color: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎉 What's New in Minesweeper Solver</h1>
+    <div class="version">Version 2.0 - January 2026</div>
+
+    <div class="center">
+      <a href="minesweeper-solver.html" class="btn">
+        <span class="emoji">🚀</span>
+        Launch Application
+      </a>
+      <a href="QUICK_REFERENCE.md" class="btn btn-secondary">
+        <span class="emoji">📚</span>
+        Quick Reference Guide
+      </a>
+    </div>
+
+    <h2>🐛 Bug Fixes</h2>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">🖱️</span>
+        Fixed Editor Drawing Bug
+        <span class="status fixed">FIXED</span>
+      </div>
+      <div class="feature-desc">
+        The board no longer continues drawing after you release the mouse button!
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Create a board, hold mouse button and draw, then release - drawing should stop immediately.
+      </div>
+    </div>
+
+    <h2>✨ New Features</h2>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">🔔</span>
+        Toast Notifications
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        Replaced blocking alerts with elegant toast notifications that auto-dismiss after a few seconds.
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Save a board to history - you'll see a notification slide in from the top-right corner.
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">✅</span>
+        Live Constraint Validation
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        The Editor now validates your board in real-time, showing errors if numbered cells have incorrect mine counts.
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Add a numbered cell (e.g., '3') and place mines around it. Watch the validation update live!
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">🎲</span>
+        Probability-Based Suggestions
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        When no cells are certain, the solver now calculates probabilities and suggests the safest cell to click.
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Solve a complex board where all cells are uncertain - you'll see a suggestion like "Cell (3,5) has 22.5% chance of being a mine."
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">💣</span>
+        Custom Favicon
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        Your browser tab now shows a mine emoji (💣) as the favicon!
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Look at your browser tab - you should see the mine emoji.
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">🌙</span>
+        Dark Theme (Default)
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        Complete dark theme with purple gradient accents for a modern, eye-friendly experience.
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> You're looking at it! The entire interface has been redesigned with a dark color scheme.
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">🚫</span>
+        Duplicate Prevention
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        The history now prevents you from saving the same board configuration multiple times.
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Solve a board, save it to history, then try saving it again - you'll see a warning.
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">📅</span>
+        Timeline View
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        View your game history as a visual timeline with mini board previews and chronological progression.
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Go to History tab and click "Timeline View" to see all your games in a timeline format.
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-title">
+        <span class="emoji">📥</span>
+        Import History
+        <span class="status new">NEW</span>
+      </div>
+      <div class="feature-desc">
+        Load previously exported history files to restore or merge your game data.
+      </div>
+      <div class="feature-test">
+        <strong>Test it:</strong> Export your history, clear it, then import the file back - your history will be restored!
+      </div>
+    </div>
+
+    <h2>📖 Quick Start Guide</h2>
+
+    <h3>1. Create a Board</h3>
+    <ul>
+      <li>Go to <strong>Editor</strong> tab</li>
+      <li>Set dimensions and click "Create Board"</li>
+      <li>Select a pen tool (. ? ! or 0-8)</li>
+      <li>Draw on the board (watch live validation!)</li>
+    </ul>
+
+    <h3>2. Solve the Board</h3>
+    <ul>
+      <li>Click "Save & Go to Solver"</li>
+      <li>Click "🔍 Solve Board"</li>
+      <li>View statistics and solution</li>
+      <li>Check for probability suggestions if all cells are uncertain</li>
+    </ul>
+
+    <h3>3. View the Solution</h3>
+    <ul>
+      <li>Click "View Solution →"</li>
+      <li>See emoji visualization: 👍 (safe), 👎 (mine), 🤔 (uncertain)</li>
+    </ul>
+
+    <h3>4. Save to History</h3>
+    <ul>
+      <li>Go back to Solver and click "Save to History"</li>
+      <li>See toast notification confirming save</li>
+      <li>View in History tab (List or Timeline view)</li>
+    </ul>
+
+    <h2>🎨 Theme Colors</h2>
+    <ul>
+      <li><strong>Background:</strong> Dark blue-gray gradient</li>
+      <li><strong>Accents:</strong> Purple gradient (#667eea → #764ba2)</li>
+      <li><strong>Text:</strong> Light gray for readability</li>
+      <li><strong>Cards:</strong> Subtle dark backgrounds</li>
+      <li><strong>Borders:</strong> Soft gray for separation</li>
+    </ul>
+
+    <h2>⌨️ Keyboard Shortcuts</h2>
+    <ul>
+      <li><code>.</code> - Select Empty pen</li>
+      <li><code>?</code> - Select Unknown pen</li>
+      <li><code>!</code> - Select Mine pen</li>
+      <li><code>0-8</code> - Select Number pen</li>
+    </ul>
+
+    <h2>📝 Documentation</h2>
+    <ul>
+      <li><strong>QUICK_REFERENCE.md</strong> - Complete user guide</li>
+      <li><strong>TEST_FEATURES.md</strong> - Feature testing checklist</li>
+      <li><strong>UPDATE_SUMMARY_v2.md</strong> - Detailed technical changes</li>
+      <li><strong>TECHNICAL.md</strong> - Algorithm documentation</li>
+    </ul>
+
+    <h2>🙏 Feedback</h2>
+    <p>All features were implemented based on your requirements:</p>
+    <ul>
+      <li>✅ Fixed drawing bug in editor</li>
+      <li>✅ Toast notifications instead of alerts</li>
+      <li>✅ Live constraint validation</li>
+      <li>✅ Probability-based suggestions</li>
+      <li>✅ Favicon added</li>
+      <li>✅ Dark theme as default</li>
+      <li>✅ No duplicate boards in history</li>
+      <li>✅ Timeline view for history</li>
+      <li>✅ Import history functionality</li>
+    </ul>
+
+    <div class="center" style="margin-top: 40px;">
+      <a href="minesweeper-solver.html" class="btn">
+        <span class="emoji">🎮</span>
+        Start Using the App
+      </a>
+    </div>
+
+    <p style="text-align: center; margin-top: 30px; color: #a1a1aa; font-size: 14px;">
+      Happy Solving! 💣🎯
+    </p>
+  </div>
+</body>
+</html>
+

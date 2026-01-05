@@ -14,23 +14,194 @@ also, take a look at the archive/ folder, it contains previous runs (boards: boa
 once understood, document the project with makrdown files and generate a webapp to make it even easier to use the best next step finder, i.e. to avoid going back and forth between the console and the web pages
 
 - the webapp should allow the user to easily generate boards, find the combined configurations board (next step plan) and save the evolution of the board per game and can be exported
-
----
-
+--------------------------------------------------
 when saving a board to history, instead of an alert, i want a notification popup that disappears automatically after a while, this is going to be a better experience than a blocking alert waiting for me to press ok!
+--------------------------------------------------
+- add live constraints check (in the editor tab) to make sure that the given board is valid
+- if no cell is certain (all unknowns), compute probabilities then suggest the cell with the lowest probability of being a mine as the next step
+- add a favicon
+- add a dark theme to the web app + set it to be the default theme
+- don't save duplicates in the history (boards should be different)
+- i want to be able to see a timeline of boards (to see the evolution of the game) and be able to load an exported history file to study past games
+--------------------------------------------------
+- align the buttons and inputs in the editor tab (see screenshot)
+- the bug where i can still paint even after releasing the mouse button and/or leaving the canvas area returned, please fix it; even when i change pens and click (simple clicks, not drags), it happens!
+- i want to add a quality of life improvement: i want to be able to upload an image or paste a screenshot from the clipboard of a board (and be able to zoom in/out, move it, crop it) and have it automatically converted to a text board that i can then edit (correct), i was thinking for a modal window where i can see the image with 50% opacity and the OCR result on top of it
+--------------------------------------------------
+- i see a shadowy small preview of the image when i start dragging it, can you remove that?
+- i can't crop the image to focus on the board, and let the OCR focus on the board instead of the score, and other ui details
+- the ocr result is not good: the board size is wrong and i get only question marks
+--------------------------------------------------
+the shadowy image issue is fixed, the cropping is working fine, but the ocr is still not good enough (wrong grid size, only question marks detected)
+--------------------------------------------------
+still having ocr issues: wrong grid dimensions + only question marks detected
+--------------------------------------------------
+i uploaded a screenshot of a 8x8 board but this is what i get in the console:
+Processing region: 912×678px
+minesweeper-solver.js:862 Grid lines not detected, trying edge detection...
+minesweeper-solver.js:867 Edge detection result: 25×25px
+minesweeper-solver.js:877 Calculated board: 27×30
 
+apparently, the grid detection is the main issue, once the grid is detected properly, the ocr should be better
+--------------------------------------------------
+still broken! i uploaded the screenshot of the board i'm trying
 
+Processing region: 922×745px
+minesweeper-solver.js:859 === Attempting automatic grid detection ===
+minesweeper-solver.js:1009 Starting grid detection...
+minesweeper-solver.js:1015 Autocorrelation detected - H: 0px, V: 0px
+minesweeper-solver.js:1070 Grid line detection - V: 0px (0 lines), H: 0px (0 lines)
+minesweeper-solver.js:866 Grid lines not detected, trying edge detection...
+minesweeper-solver.js:1192 Trying edge detection for horizontal...
+minesweeper-solver.js:1242 Found 0 peaks
+minesweeper-solver.js:1245 Edge spacing: 0px
+minesweeper-solver.js:1192 Trying edge detection for vertical...
+minesweeper-solver.js:1242 Found 0 peaks
+minesweeper-solver.js:1245 Edge spacing: 0px
+minesweeper-solver.js:884 Edge detection failed, trying smart estimation...
+minesweeper-solver.js:951 Using smart estimation based on common board sizes...
+minesweeper-solver.js:996 Smart estimation: 20×20, cell: 46×37px
+minesweeper-solver.js:925 Final board: 20×20, cell: 46×37px
+--------------------------------------------------
+still getting it wrong! - the board should be 8x8 but i keep getting larger sizes
 
+Processing region: 912×678px
+minesweeper-solver.js:921 === Attempting automatic grid detection ===
+minesweeper-solver.js:1071 Starting grid detection...
+minesweeper-solver.js:1077 Autocorrelation detected - H: 17px, V: 20px
+minesweeper-solver.js:959 Aspect ratio mismatch (1.35 vs 0.85), recalculating...
+minesweeper-solver.js:978 Using square board assumption: 30×30, cell: 30×23px
+minesweeper-solver.js:987 Final board: 30×30, cell: 30×23px
+--------------------------------------------------
+even with the manual dimensions input, the ocr is still bad! (i get only question marks, it fails to detect numbers, mines, and empty cells)
 
+Processing region: 908×686px
+minesweeper-solver.js:932 === Attempting automatic grid detection ===
+minesweeper-solver.js:1082 Starting grid detection...
+minesweeper-solver.js:1088 Autocorrelation detected - H: 17px, V: 20px
+minesweeper-solver.js:970 Aspect ratio mismatch (1.32 vs 0.85), recalculating...
+minesweeper-solver.js:989 Using square board assumption: 30×30, cell: 30×23px
+minesweeper-solver.js:998 Final board: 30×30, cell: 30×23px
+minesweeper-solver.js:791 [Violation] 'setTimeout' handler took 68ms
+minesweeper-solver.js:562 Auto-calculated cell size: 179×181px → using 181px
+minesweeper-solver.js:880 Processing region: 908×686px
+minesweeper-solver.js:899 Using manual board dimensions: 8×8
+minesweeper-solver.js:916 Calculated cell size: 114×86px
+minesweeper-solver.js:998 Final board: 8×8, cell: 114×86px
+--------------------------------------------------
+a bit better (at least, i don't get only question marks), but there are still errors in the ocr result
+this is the output of the console:
 
+Auto-calculated cell size: 181×181px → using 181px
+minesweeper-solver.js:883 Processing region: 916×678px
+minesweeper-solver.js:902 Using manual board dimensions: 8×8
+minesweeper-solver.js:919 Calculated cell size: 115×85px
+minesweeper-solver.js:1001 Final board: 8×8, cell: 115×85px
+minesweeper-solver.js:1367 Cell at (57, 42):
+      Avg RGB:(206,208,186)
+      Brightness:200 Range:36
+      Variance:305 Pattern:false
+minesweeper-solver.js:1367 Cell at (171, 42):
+      Avg RGB:(227,231,205)
+      Brightness:221 Range:1
+      Variance:0 Pattern:false
+minesweeper-solver.js:1367 Cell at (286, 42):
+      Avg RGB:(217,223,210)
+      Brightness:217 Range:115
+      Variance:506 Pattern:true
+minesweeper-solver.js:1367 Cell at (400, 42):
+      Avg RGB:(191,193,189)
+      Brightness:191 Range:160
+      Variance:3756 Pattern:true
+minesweeper-solver.js:1367 Cell at (515, 42):
+      Avg RGB:(211,229,194)
+      Brightness:211 Range:131
+      Variance:1259 Pattern:true
 
+this is the result of the ocr:
+?.??1?.2
+?11?2?.2
+??1?1?.2
+??1?1?.2
+???21?.2
+???1??.2
+.......2
+22222221
 
+and this is the expected result:
+.101....
+.101111.
+.200001.
+.211011.
+...101..
+..3101..
+..3011..
+..201...
+--------------------------------------------------
+still having some issues, by the way, i don't crop exactly to the boarders, i leave a bit of margin around the board when cropping, maybe you should take that into account
+this is the latest try:
 
+?21?12..
+?21112..
+233223..
+223223..
+222223..
+?3?1?2..
+........
+........
+--------------------------------------------------
+it's not working that well! is there another way to apply ocr or to classify the cells?
+--------------------------------------------------
+even tesseract is not working well, this is the output i get on the console:
 
+Auto-calculated cell size: 179×179px → using 179px
+minesweeper-solver.js:860 Tesseract raw output: P4 L
 
+2]101] |1]1]
+EERENEN
+HENENAEE
+HEEHAEN
+EHEREEE -
+--------------------------------------------------
+now, the tesseract method (which was supposed to be better) gives me only question marks! is there another way to improve the image to board functionality?
+--------------------------------------------------
+okay, let's build the visual grid editor
+--------------------------------------------------
+uploading an image to the visual grid editor gives me a black canvas!
+--------------------------------------------------
+apparently, there is a syntax error:
+minesweeper-solver.js:2758 Uncaught SyntaxError: Unexpected token '}'
+--------------------------------------------------
+still having a black canvas when uploading an image to the visual grid editor
+--------------------------------------------------
+no luck! still having a black canvas! and don't update the prompts.txt file! only the CHANGELOG files when reporting updates and fixes!
+--------------------------------------------------
+now, the image appears on the canvas, but when i try to zoom, i get this error (on the console):
+minesweeper-solver.js:2699 Canvas not initialized
 
+also, add cropping functionality to the uploaded image
+--------------------------------------------------
+cropping works but i still get these errors on the console:
 
+minesweeper-solver.js:2957 Uncaught TypeError: Cannot read properties of undefined (reading '3')
+    at HTMLCanvasElement.handleGridCellClick (minesweeper-solver.js:2957:102)
+handleGridCellClick @ minesweeper-solver.js:2957Understand this error
+minesweeper-solver.js:2695 Crop region set: 17, 114, 372×372
+minesweeper-solver.js:2957 Uncaught TypeError: Cannot read properties of undefined (reading '6')
+    at HTMLCanvasElement.handleGridCellClick (minesweeper-solver.js:2957:102)
 
-
-
+also, make the cropping mechanism like the one we had in the ocr tab with dots on the corners and sides for easier resizing
+--------------------------------------------------
+everything works smoothly now, except the "export to board" button:
+minesweeper-solver.js:3103 Uncaught TypeError: createBoard is not a function
+    at HTMLButtonElement.exportGrid (minesweeper-solver.js:3103:3)
+--------------------------------------------------
+i don't get any error now, but when i click on "export to board", i get a notification confirming the export, but nothing happens, the board is empty!
+--------------------------------------------------
+when i go back to the visual grid editor tab after exporting to board, it breaks! (can't upload a new image and build another board!)
+--------------------------------------------------
+i noticed i still have the "paint even after releasing the mouse button" issue, please fix it!
+--------------------------------------------------
+i still can change cells merely by hovering over them even after releasing the mouse!!
+also, make a tiny script to start a local web server to serve the webapp (to avoid cors issues with file:// protocol)
 
