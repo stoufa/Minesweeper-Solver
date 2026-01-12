@@ -7,6 +7,141 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.0] - 2026-01-12 - Visual Suggestion Board & Grid Editor Fixes
+
+### Added
+- **Visual Suggestion Board Display** - Probability suggestions now include a graphical board representation
+  - Shows the entire board with suggested cells highlighted
+  - Best cell marked with ★ (star) in bright green
+  - Alternative safe cells marked with ② ③ ④ ⑤ 
+  - Easy to locate suggested cells without counting rows/columns
+  - Color-coded highlighting: brightest for best choice, fading for alternatives
+  - Legend shows what each marker means
+
+### Fixed - Visual Grid Editor
+- **Opacity Application**: Image opacity now applies immediately when image is uploaded
+  - Previously opacity was at 100% on upload, now respects the slider value (default 30%)
+  - Users can see the faded image right away for better grid overlay
+- **Crop Re-adjustment**: Can now toggle crop on/off even after grid is created
+  - Toggle crop button hides the grid and shows crop overlay
+  - Adjust crop region as needed
+  - Toggle crop off to show grid again with new crop region
+  - Solves the issue of being locked into initial crop
+- **Reset Functionality**: Reset button now properly clears file input
+  - Can upload new images after reset without staying in upload dialog
+  - All grid state properly cleared including crop settings
+  - File input value reset to allow re-selecting same file
+
+### Enhanced
+- **Visual Suggestion Board**:
+  - Displays actual cell values (numbers, mines, unknowns) with suggested cells overlaid
+  - Numbered cells shown in appropriate colors (blue for 1, green for 2, red for 3+, etc.)
+  - Mines shown as 💣, unknowns as ?, empty cells faded
+  - Grid layout matches actual board dimensions
+  - Compact display (25px cells) fits in suggestion panel
+- **Grid Editor Crop Behavior**:
+  - Crop mode prevents cell clicks (avoids accidental edits)
+  - Grid hidden when crop enabled for clearer crop adjustment
+  - Smooth transitions between crop mode and grid mode
+
+### Technical Details
+- `generateSuggestionBoard(board, sortedCells)`: Creates HTML visual board with highlights
+- `loadGridImageFile()`: Now applies `gridState.opacity` immediately on image load
+- `toggleCrop()`: Updated to work with existing grids, calls `redrawGrid()` intelligently
+- `redrawGrid()`: Checks crop state, delegates to `redrawCropOverlay()` if crop enabled
+- `handleGridCellClick()`: Returns early if crop is enabled
+- `resetGridEditor()`: Clears file input value and all crop state
+
+---
+
+## [3.5.0] - 2026-01-12 - Visual Grid Editor Constraint Validation
+
+### Added
+- **Automatic Board Validation on Export** - Visual Grid Editor now validates board constraints before exporting
+  - Checks all numbered cells to ensure mine count constraints are satisfied
+  - Detects violations like "too many mines" or "impossible to satisfy"
+  - Shows detailed error messages listing all constraint violations
+  - Prompts user with option to export anyway or cancel
+- **validateBoardData() Function** - New programmatic validation function
+  - Can validate any board data (not just editor board)
+  - Returns structured validation results with error list
+  - Used by export function and can be reused elsewhere
+
+### Enhanced
+- **Better Export Feedback**:
+  - Success toast shows "✅ Board exported (all constraints valid)" when valid
+  - Warning toast shows "⚠️ Board exported (with constraint violations)" when invalid
+  - Confirmation dialog lists up to 5 errors with option to see more
+  - User can choose to export anyway for testing/debugging purposes
+
+### Technical Details
+- `validateBoardData(board)`: Returns `{ valid, errors, hasNumbers }`
+- `exportGrid()`: Calls validation before exporting, shows confirmation if errors
+- Validation checks both "too many mines" and "not enough cells" scenarios
+- Consistent with existing `validateBoardConstraints()` for editor tab
+
+---
+
+## [3.4.0] - 2026-01-12 - Probability Feature Fixes & Heuristic Solver
+
+### Fixed
+- **Critical solver bug**: Solver now works properly when no valid configurations are found
+- Previously, solver would return the input board unchanged when configurations couldn't be generated
+- Fixed issue where large boards (many unknown cells) would fail silently
+
+### Added
+- **Heuristic Probability Calculation** - When no valid configurations can be found through sampling, the solver now uses a heuristic approach:
+  - Calculates local mine density around each unknown cell
+  - Uses neighboring number constraints to estimate probabilities
+  - Provides educated guesses even when exact analysis isn't feasible
+- **Smart Configuration Sampling** - For large boards (>15 unknown cells):
+  - Uses constraint-guided random sampling instead of pure random
+  - Analyzes local constraints to make better initial guesses
+  - Increases success rate of finding valid configurations
+  - Up to 100,000 sampling attempts for better coverage
+- **Warning Message** - UI now indicates when heuristic probabilities are being used
+  - Alerts users that probabilities are estimates, not exact calculations
+  - Helps users understand the limitations of the analysis
+
+### Enhanced
+- **Improved Configuration Generation**:
+  - Small boards (<= 10 unknowns): Exhaustive brute force (all 2^n possibilities)
+  - Medium boards (11-15 unknowns): Random sampling with 50,000 attempts
+  - Large boards (>15 unknowns): Smart constraint-guided sampling with 100,000 attempts
+- **Better Statistics**:
+  - Now tracks mine cells separately in stats
+  - Added uncertainCells count to all stat outputs
+  - Console logging for debugging large board configuration attempts
+
+### Technical Details
+- `generateConfigurations()`: Now uses three-tier strategy based on outline size
+- `calculateHeuristicProbabilities()`: New function for constraint-based probability estimation
+- `solveMinesweeper()`: Handles zero-configuration case gracefully with fallback to heuristics
+- All outline cells marked as uncertain (#) when no configurations found
+
+---
+
+## [3.3.0] - 2026-01-12 - Enhanced Probability Display
+
+### Added
+- **Top 5 Safest Cells Display** - When no certain moves are available, the solver now shows a table with the top 5 safest cells
+- Each cell shows both mine probability and safety percentage
+- Best cell is highlighted with green background for easy identification
+- Formatted table display with clear headers and aligned columns
+
+### Enhanced
+- **Improved Probability Suggestion UI**
+- Changed wording to emphasize "safe percentage" rather than "mine percentage" for better user experience
+- Added comprehensive table showing multiple safe options, not just the best one
+- Visual highlighting makes it easier to identify the safest choice at a glance
+
+### Technical Details
+- Probabilities are calculated by counting mine occurrences across all valid configurations
+- Cells are sorted by mine probability (ascending) to show safest cells first
+- Table styling matches the dark theme with subtle borders and highlighting
+
+---
+
 ## [3.2.0] - 2026-01-05 - Cell Update Optimization & Web Server Scripts
 
 ### Fixed

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solver Test</title>
+</head>
+<body>
+    <h1>Testing Solver</h1>
+    <pre id="output"></pre>
+    <script src="minesweeper-solver.js"></script>
+    <script>
+        // Test board from user
+        const testBoard = `................
+................
+................
+.........3332...
+.....!312!11!211
+...34!2011111211
+222!2110000001!1
+!111100000000111
+1100011112211221
+110001!22!!11!!1
+!100012!22212342
+1100112121101!2!
+11102!201!102231
+1!102!2022201!10
+222121101!101121
+!11!10001110001!`;
+
+        const board = testBoard.split('\n').filter(line => line.length > 0).map(line => line.split(''));
+
+        console.log('Board dimensions:', board.length, 'x', board[0].length);
+        console.log('Testing solver...');
+
+        const result = solveMinesweeper(board);
+
+        console.log('Result:', result);
+
+        const output = document.getElementById('output');
+        output.textContent = JSON.stringify(result.stats, null, 2);
+
+        if (result.bestCell) {
+            output.textContent += '\n\nBest cell: ' + result.bestCell.position +
+                                  ' (probability: ' + (result.bestCell.probability * 100).toFixed(1) + '%)';
+        }
+
+        if (result.probabilities) {
+            output.textContent += '\n\nTop 5 safest cells:\n';
+            const sorted = Object.entries(result.probabilities)
+                .map(([pos, prob]) => ({ position: pos, probability: prob }))
+                .sort((a, b) => a.probability - b.probability)
+                .slice(0, 5);
+
+            sorted.forEach(cell => {
+                output.textContent += `  ${cell.position}: ${(100 - cell.probability * 100).toFixed(1)}% safe\n`;
+            });
+        }
+    </script>
+</body>
+</html>
+

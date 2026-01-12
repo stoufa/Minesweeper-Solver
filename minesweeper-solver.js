@@ -375,6 +375,54 @@ function validateBoardConstraints() {
   }
 }
 
+// Validate a board and return validation results (used for programmatic validation)
+function validateBoardData(board) {
+  const nrows = board.length;
+  const ncols = board[0] ? board[0].length : 0;
+  const errors = [];
+  let hasNumbers = false;
+
+  if (nrows === 0 || ncols === 0) {
+    return { valid: true, errors: [], hasNumbers: false };
+  }
+
+  for (let r = 0; r < nrows; r++) {
+    for (let c = 0; c < ncols; c++) {
+      const cell = board[r][c];
+      if (cell >= '0' && cell <= '8') {
+        hasNumbers = true;
+        const expected = parseInt(cell);
+        const neighbors = getNeighbors(r, c, nrows, ncols);
+
+        let mineCount = 0;
+        let unknownCount = 0;
+
+        for (const [nr, nc] of neighbors) {
+          const neighborCell = board[nr][nc];
+          if (neighborCell === '!') {
+            mineCount++;
+          } else if (neighborCell === '.' || neighborCell === '?') {
+            unknownCount++;
+          }
+        }
+
+        // Check if constraint is violated
+        if (mineCount > expected) {
+          errors.push(`Cell (${r},${c}) has ${cell} but ${mineCount} mines nearby (too many)`);
+        } else if (mineCount + unknownCount < expected) {
+          errors.push(`Cell (${r},${c}) has ${cell} but can't reach it (not enough cells)`);
+        }
+      }
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors: errors,
+    hasNumbers: hasNumbers
+  };
+}
+
 // ============================================================================
 // OCR / IMAGE IMPORT FUNCTIONS
 // ============================================================================
@@ -1835,14 +1883,46 @@ function solveBoard() {
 
       // Show probability suggestion if available
       const suggestionDiv = document.getElementById('probabilitySuggestion');
-      if (result.bestCell) {
+      if (result.bestCell && result.probabilities) {
         const [r, c] = result.bestCell.position.split(',');
-        const percentage = (result.bestCell.probability * 100).toFixed(1);
+        const minePercentage = (result.bestCell.probability * 100).toFixed(1);
+        const safePercentage = (100 - result.bestCell.probability * 100).toFixed(1);
+
+        // Get top 5 safest cells
+        const sortedCells = Object.entries(result.probabilities)
+          .map(([pos, prob]) => ({ position: pos, probability: prob }))
+          .sort((a, b) => a.probability - b.probability)
+          .slice(0, 5);
+
+        let cellsTable = '<div style="margin-top: 10px;"><strong>Top 5 Safest Cells:</strong><br>';
+        cellsTable += '<table style="width: 100%; margin-top: 8px; border-collapse: collapse;">';
+        cellsTable += '<tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><th style="text-align: left; padding: 4px;">Cell (row, col)</th><th style="text-align: right; padding: 4px;">Mine %</th><th style="text-align: right; padding: 4px;">Safe %</th></tr>';
+
+        sortedCells.forEach((cell, index) => {
+          const [cellR, cellC] = cell.position.split(',');
+          const cellMinePerc = (cell.probability * 100).toFixed(1);
+          const cellSafePerc = (100 - cell.probability * 100).toFixed(1);
+          const highlight = index === 0 ? 'style="background: rgba(16, 185, 129, 0.2);"' : '';
+          cellsTable += `<tr ${highlight}><td style="padding: 4px;">(${cellR}, ${cellC})</td><td style="text-align: right; padding: 4px;">${cellMinePerc}%</td><td style="text-align: right; padding: 4px; color: #6ee7b7;">${cellSafePerc}%</td></tr>`;
+        });
+
+        cellsTable += '</table></div>';
+
+        // Generate visual board with highlighted suggestions
+        const visualBoard = generateSuggestionBoard(board, sortedCells);
+
+        // Check if using heuristics (no valid configurations found)
+        const methodNote = result.stats.configurations === 0
+          ? '<div style="margin-top: 10px; padding: 8px; background: rgba(251, 191, 36, 0.2); border-left: 3px solid #fbbf24; border-radius: 4px;"><strong>⚠️ Note:</strong> Using heuristic probabilities (no valid configurations found in sample). These are educated guesses based on local constraints.</div>'
+          : '';
+
         suggestionDiv.className = 'alert alert-info';
         suggestionDiv.innerHTML = `
           <strong>💡 No certain moves available!</strong><br>
-          Best guess: Cell (${r}, ${c}) has ${percentage}% chance of being a mine.<br>
-          This is your safest bet with ${(100 - result.bestCell.probability * 100).toFixed(1)}% safety.
+          <strong>Best guess:</strong> Cell (${r}, ${c}) - ${safePercentage}% chance of being safe (${minePercentage}% mine risk)
+          ${cellsTable}
+          ${visualBoard}
+          ${methodNote}
         `;
         suggestionDiv.classList.remove('hidden');
       } else {
@@ -1865,6 +1945,101 @@ function viewSolution() {
   document.getElementById('viewerInput').value = state.solver.outputBoard;
   renderViewerBoard();
   document.querySelector('.tab[data-tab="viewer"]').click();
+}
+
+function generateSuggestionBoard(board, sortedCells) {
+  const nrows = board.length;
+  const ncols = board[0].length;
+
+  // Create a map of suggested cells with their rank (1-5)
+  const suggestionMap = {};
+  sortedCells.forEach((cell, index) => {
+    suggestionMap[cell.position] = index + 1;
+  });
+
+  // Build HTML for visual board
+  let html = '<div style="margin-top: 15px;"><strong>📍 Visual Board (suggested cells highlighted):</strong></div>';
+  html += '<div style="margin-top: 8px; display: inline-block; border: 2px solid var(--border-color); border-radius: 4px; overflow: hidden;">';
+  html += '<div style="display: grid; grid-template-columns: repeat(' + ncols + ', 25px); gap: 0; background: var(--bg-secondary);">';
+
+  for (let r = 0; r < nrows; r++) {
+    for (let c = 0; c < ncols; c++) {
+      const cellKey = `${r},${c}`;
+      const cellValue = board[r][c];
+      const rank = suggestionMap[cellKey];
+
+      let bgColor = 'var(--bg-secondary)';
+      let textColor = 'var(--text-secondary)';
+      let borderStyle = '1px solid rgba(255,255,255,0.1)';
+      let displayValue = cellValue;
+      let fontSize = '14px';
+      let fontWeight = 'normal';
+
+      // Style based on cell type
+      if (cellValue === '.') {
+        textColor = '#888';
+        displayValue = '';
+      } else if (cellValue === '!') {
+        textColor = '#ff6b6b';
+        displayValue = '💣';
+        fontSize = '12px';
+      } else if (cellValue === '?') {
+        textColor = '#ffd93d';
+        displayValue = '?';
+      } else if (cellValue >= '0' && cellValue <= '8') {
+        const colors = ['#888', '#4dabf7', '#51cf66', '#ff6b6b', '#9775fa', '#ff922b', '#20c997', '#495057', '#e03131'];
+        textColor = colors[parseInt(cellValue)];
+        fontWeight = 'bold';
+      }
+
+      // Highlight suggested cells
+      if (rank) {
+        if (rank === 1) {
+          bgColor = 'rgba(16, 185, 129, 0.3)'; // Best cell - bright green
+          borderStyle = '2px solid #10b981';
+          displayValue = '★';
+          fontSize = '16px';
+          textColor = '#10b981';
+          fontWeight = 'bold';
+        } else if (rank === 2) {
+          bgColor = 'rgba(16, 185, 129, 0.2)';
+          borderStyle = '2px solid #34d399';
+          displayValue = '②';
+          fontSize = '14px';
+          textColor = '#34d399';
+          fontWeight = 'bold';
+        } else if (rank === 3) {
+          bgColor = 'rgba(16, 185, 129, 0.15)';
+          borderStyle = '2px solid #6ee7b7';
+          displayValue = '③';
+          fontSize = '14px';
+          textColor = '#6ee7b7';
+          fontWeight = 'bold';
+        } else if (rank === 4) {
+          bgColor = 'rgba(16, 185, 129, 0.1)';
+          borderStyle = '2px solid #a7f3d0';
+          displayValue = '④';
+          fontSize = '13px';
+          textColor = '#a7f3d0';
+        } else if (rank === 5) {
+          bgColor = 'rgba(16, 185, 129, 0.08)';
+          borderStyle = '2px solid #d1fae5';
+          displayValue = '⑤';
+          fontSize = '13px';
+          textColor = '#d1fae5';
+        }
+      }
+
+      html += `<div style="width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; background: ${bgColor}; color: ${textColor}; border: ${borderStyle}; font-size: ${fontSize}; font-weight: ${fontWeight}; box-sizing: border-box;">${displayValue}</div>`;
+    }
+  }
+
+  html += '</div></div>';
+  html += '<div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">';
+  html += '★ = Best choice (lowest mine risk) | ② ③ ④ ⑤ = Alternative safe choices';
+  html += '</div>';
+
+  return html;
 }
 
 function saveToHistory() {
@@ -1936,7 +2111,8 @@ function solveMinesweeper(board) {
         outlineSize: 0,
         clusters: 0,
         configurations: 0,
-        safeCells: 0
+        safeCells: 0,
+        uncertainCells: 0
       }
     };
   }
@@ -1944,25 +2120,43 @@ function solveMinesweeper(board) {
   // Generate all possible configurations (simplified version)
   const configurations = generateConfigurations(board, outlineList, numbers, nrows, ncols);
 
-  // Combine configurations
-  const solution = combineConfigurations(board, configurations, outlineList);
+  // If no configurations found, mark all outline cells as uncertain
+  let solution;
+  if (configurations.length === 0) {
+    solution = board.map(row => [...row]);
+    for (const [r, c] of outlineList) {
+      solution[r][c] = '#';
+    }
+  } else {
+    // Combine configurations
+    solution = combineConfigurations(board, configurations, outlineList);
+  }
 
   // Calculate stats
   let safeCells = 0;
+  let mineCells = 0;
   let uncertainCells = 0;
   for (let r = 0; r < nrows; r++) {
     for (let c = 0; c < ncols; c++) {
       if (solution[r][c] === 'o') safeCells++;
+      if (solution[r][c] === 'x') mineCells++;
       if (solution[r][c] === '#') uncertainCells++;
     }
   }
 
-  // Calculate probabilities if no certain cells
+  // Calculate probabilities if no certain cells or all uncertain
   let probabilities = null;
   let bestCell = null;
-  if (safeCells === 0 && uncertainCells > 0 && configurations.length > 0) {
-    probabilities = calculateProbabilities(configurations, outlineList);
-    bestCell = findSafestCell(probabilities);
+  if (safeCells === 0 && uncertainCells > 0) {
+    if (configurations.length > 0) {
+      probabilities = calculateProbabilities(configurations, outlineList);
+      bestCell = findSafestCell(probabilities);
+    } else {
+      // No valid configurations found - use heuristic
+      // Simple heuristic: cells far from numbers are generally safer
+      probabilities = calculateHeuristicProbabilities(board, outlineList, numbers, nrows, ncols);
+      bestCell = findSafestCell(probabilities);
+    }
   }
 
   return {
@@ -1972,6 +2166,7 @@ function solveMinesweeper(board) {
       clusters: 1, // Simplified - not doing cluster decomposition in JS
       configurations: configurations.length,
       safeCells,
+      mineCells,
       uncertainCells
     },
     probabilities,
@@ -1996,12 +2191,86 @@ function getNeighbors(r, c, nrows, ncols) {
 
 function generateConfigurations(board, outline, numbers, nrows, ncols) {
   const configs = [];
-  const maxConfigs = Math.min(1024, Math.pow(2, outline.length)); // Limit for performance
+  const maxConfigs = 1024; // Maximum configurations to keep
 
   // Try random sampling if too many possibilities
-  if (outline.length > 10) {
-    // Sample random configurations
-    for (let i = 0; i < maxConfigs; i++) {
+  if (outline.length > 15) {
+    // Use smarter random sampling for large boards
+    const maxAttempts = Math.min(100000, Math.pow(2, outline.length));
+    let attempts = 0;
+
+    console.log(`Large outline (${outline.length} cells), using smart sampling with ${maxAttempts} attempts...`);
+
+    while (configs.length < maxConfigs && attempts < maxAttempts) {
+      attempts++;
+      const config = board.map(row => [...row]);
+      let valid = true;
+
+      // Smarter assignment: use local constraints to guide random choices
+      for (const [r, c] of outline) {
+        // Calculate local probability hint
+        const neighbors = getNeighbors(r, c, nrows, ncols);
+        let localMineProb = 0.5;
+        let constraintCount = 0;
+
+        for (const [nr, nc] of neighbors) {
+          const cell = config[nr][nc];
+          if (cell >= '0' && cell <= '8') {
+            const num = parseInt(cell);
+            const cellNeighbors = getNeighbors(nr, nc, nrows, ncols);
+
+            let knownMines = 0;
+            let unknowns = 0;
+            for (const [nnr, nnc] of cellNeighbors) {
+              if (config[nnr][nnc] === '!' || config[nnr][nnc] === 'x') knownMines++;
+              if (config[nnr][nnc] === '.' || config[nnr][nnc] === '?') unknowns++;
+            }
+
+            if (unknowns > 0) {
+              localMineProb += (num - knownMines) / unknowns;
+              constraintCount++;
+            }
+          }
+        }
+
+        if (constraintCount > 0) {
+          localMineProb = Math.min(1.0, localMineProb / constraintCount);
+        }
+
+        // Assign based on probability
+        config[r][c] = Math.random() < localMineProb ? 'x' : 'o';
+      }
+
+      // Validate
+      for (const key in numbers) {
+        const [r, c] = key.split(',').map(Number);
+        const expected = numbers[key];
+        const neighbors = getNeighbors(r, c, nrows, ncols);
+        let mineCount = 0;
+
+        for (const [nr, nc] of neighbors) {
+          if (config[nr][nc] === '!' || config[nr][nc] === 'x') {
+            mineCount++;
+          }
+        }
+
+        if (mineCount !== expected) {
+          valid = false;
+          break;
+        }
+      }
+
+      if (valid) {
+        configs.push(config);
+      }
+    }
+
+    console.log(`Found ${configs.length} valid configurations after ${attempts} attempts`);
+  } else if (outline.length > 10) {
+    // Medium-sized: use more random attempts
+    const maxAttempts = 50000;
+
+    for (let i = 0; i < maxAttempts && configs.length < maxConfigs; i++) {
       const config = board.map(row => [...row]);
       let valid = true;
 
@@ -2131,6 +2400,53 @@ function findSafestCell(probabilities) {
   }
 
   return safestCell;
+}
+
+function calculateHeuristicProbabilities(board, outline, numbers, nrows, ncols) {
+  // Heuristic-based probability when we can't generate configurations
+  // Strategy: Calculate local mine density around each unknown cell
+  const probabilities = {};
+
+  for (const [r, c] of outline) {
+    const neighbors = getNeighbors(r, c, nrows, ncols);
+    let totalConstraint = 0;
+    let constraintCount = 0;
+
+    // Look at neighboring numbers
+    for (const [nr, nc] of neighbors) {
+      const cell = board[nr][nc];
+      if (cell >= '0' && cell <= '8') {
+        const num = parseInt(cell);
+        const cellNeighbors = getNeighbors(nr, nc, nrows, ncols);
+
+        // Count known mines and unknowns around this number
+        let knownMines = 0;
+        let unknowns = 0;
+        for (const [nnr, nnc] of cellNeighbors) {
+          if (board[nnr][nnc] === '!') knownMines++;
+          if (board[nnr][nnc] === '.' || board[nnr][nnc] === '?') unknowns++;
+        }
+
+        // Remaining mines to place around this number
+        const remaining = num - knownMines;
+        if (unknowns > 0) {
+          // Local probability that this cell is a mine
+          totalConstraint += remaining / unknowns;
+          constraintCount++;
+        }
+      }
+    }
+
+    // Average probability based on neighboring constraints
+    if (constraintCount > 0) {
+      probabilities[`${r},${c}`] = Math.min(1.0, totalConstraint / constraintCount);
+    } else {
+      // No constraints - assume average mine density (conservative estimate)
+      probabilities[`${r},${c}`] = 0.2; // 20% default
+    }
+  }
+
+  return probabilities;
 }
 
 // ============================================================================
@@ -2611,7 +2927,7 @@ function initVisualGridEditor() {
 
   // Crop rectangle manipulation with handles
   canvas.addEventListener('mousedown', (e) => {
-    if (!gridState.cropEnabled || (gridState.cells && gridState.cells.length > 0)) return;
+    if (!gridState.cropEnabled) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -2740,29 +3056,32 @@ function loadGridImageFile(file) {
       console.log(`Image loaded successfully: ${img.width}×${img.height}`);
       gridState.image = img;
 
-      // IMMEDIATE TEST: Try to draw to canvas right now
+      // Set up canvas and draw image with current opacity
       const testCanvas = document.getElementById('gridEditorCanvas');
       if (testCanvas) {
         // Set up canvas state
         gridState.canvas = testCanvas;
         gridState.ctx = testCanvas.getContext('2d');
 
-        testCanvas.width = img.width;
-        testCanvas.height = img.height;
+        testCanvas.width = img.width * gridState.scale;
+        testCanvas.height = img.height * gridState.scale;
         try {
-          gridState.ctx.drawImage(img, 0, 0);
-          console.log('🎉 IMMEDIATE TEST SUCCESS: Image drawn to canvas right after load!');
+          // Apply opacity immediately
+          gridState.ctx.globalAlpha = gridState.opacity;
+          gridState.ctx.drawImage(img, 0, 0, testCanvas.width, testCanvas.height);
+          gridState.ctx.globalAlpha = 1.0;
+          console.log('🎉 Image drawn to canvas with opacity:', gridState.opacity);
           console.log('Canvas is now:', testCanvas.width, 'x', testCanvas.height);
         } catch (err) {
-          console.error('❌ IMMEDIATE TEST FAILED:', err);
+          console.error('❌ Failed to draw image:', err);
         }
       } else {
-        console.error('❌ Canvas element not found for immediate test');
+        console.error('❌ Canvas element not found');
       }
 
       document.getElementById('uploadSection').style.display = 'none';
       document.getElementById('gridEditorSection').style.display = 'block';
-      showSuccessToast('Image loaded! Adjust zoom/opacity or click "Create Grid"');
+      showSuccessToast('Image loaded! Adjust zoom/opacity/crop or click "Create Grid"');
     };
     img.onerror = (error) => {
       console.error('Image loading error:', error);
@@ -2871,10 +3190,17 @@ function redrawGrid() {
   const ctx = gridState.ctx;
   const canvas = gridState.canvas;
 
+  // If crop is enabled, just show the crop overlay (hide the grid)
+  if (gridState.cropEnabled) {
+    redrawCropOverlay();
+    return;
+  }
+
   // Determine source region (cropped or full)
   let sourceX = 0, sourceY = 0, sourceWidth = gridState.image.width, sourceHeight = gridState.image.height;
 
-  if (gridState.cropEnabled && gridState.cropWidth > 0 && gridState.cropHeight > 0) {
+  if (gridState.cropWidth > 0 && gridState.cropHeight > 0 && gridState.cells && gridState.cells.length > 0) {
+    // Use the crop region if it was set
     sourceX = gridState.cropX / gridState.scale;
     sourceY = gridState.cropY / gridState.scale;
     sourceWidth = gridState.cropWidth / gridState.scale;
@@ -2901,6 +3227,11 @@ function redrawGrid() {
     console.error('Error drawing image:', error);
   }
   ctx.globalAlpha = 1.0;
+
+  // Only draw grid if cells exist
+  if (!gridState.cells || gridState.cells.length === 0) {
+    return;
+  }
 
   // Calculate cell dimensions
   const cellWidth = canvas.width / gridState.cols;
@@ -2964,6 +3295,9 @@ function redrawGrid() {
 
 function handleGridCellClick(e) {
   if (!gridState.canvas) return;
+
+  // Don't handle cell clicks if crop is enabled
+  if (gridState.cropEnabled) return;
 
   // Only handle cell clicks if grid has been created
   if (!gridState.cells || gridState.cells.length === 0) return;
@@ -3067,6 +3401,26 @@ function clearGrid() {
 }
 
 function exportGrid() {
+  // Validate the board before exporting
+  const validationResult = validateBoardData(gridState.cells);
+
+  if (!validationResult.valid) {
+    // Show validation errors
+    const errorList = validationResult.errors.slice(0, 5).join('\n• ');
+    const moreErrors = validationResult.errors.length > 5
+      ? `\n... and ${validationResult.errors.length - 5} more errors`
+      : '';
+
+    const confirmed = confirm(
+      `⚠️ Board Constraint Violations Found!\n\n• ${errorList}${moreErrors}\n\nDo you want to export anyway?`
+    );
+
+    if (!confirmed) {
+      showWarningToast('Export cancelled. Please fix the constraints first.');
+      return;
+    }
+  }
+
   // Apply to editor
   const editorRows = document.getElementById('rows');
   const editorCols = document.getElementById('cols');
@@ -3084,7 +3438,12 @@ function exportGrid() {
   renderEditorBoard();
 
   document.getElementById('ocrModal').classList.remove('active');
-  showSuccessToast(`Board exported: ${gridState.rows}×${gridState.cols}`);
+
+  if (validationResult.valid) {
+    showSuccessToast(`✅ Board exported: ${gridState.rows}×${gridState.cols} (all constraints valid)`);
+  } else {
+    showWarningToast(`⚠️ Board exported: ${gridState.rows}×${gridState.cols} (with constraint violations)`);
+  }
 
   // Switch to editor tab
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -3141,13 +3500,19 @@ function toggleCrop() {
       gridState.cropX = centerX - gridState.cropWidth / 2;
       gridState.cropY = centerY - gridState.cropHeight / 2;
     }
-    showInfoToast('Crop enabled! Drag the rectangle or use handles to resize.');
+    showInfoToast('Crop enabled! Drag the rectangle or use handles to resize. Grid hidden.');
   } else {
-    showInfoToast('Crop disabled. Full image will be used.');
+    showInfoToast('Crop disabled. Grid will be shown.');
   }
 
-  // Redraw to show/hide crop overlay
-  redrawCropOverlay();
+  // Redraw to show/hide crop overlay and grid
+  if (gridState.cells && gridState.cells.length > 0) {
+    // Grid exists - show or hide it based on crop state
+    redrawGrid();
+  } else {
+    // No grid yet - just redraw crop overlay
+    redrawCropOverlay();
+  }
 }
 
 function redrawCropOverlay() {
@@ -3228,11 +3593,33 @@ function getResizeHandle(x, y) {
 }
 
 function resetGridEditor() {
+  // Clear the canvas
+  const canvas = document.getElementById('gridEditorCanvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Reset all grid state
+  gridState.cells = [];
+  gridState.cols = 8;
+  gridState.rows = 8;
   gridState.image = null;
   gridState.selectedRow = -1;
   gridState.selectedCol = -1;
   gridState.scale = 1;
   gridState.opacity = 0.3;
+  gridState.cropEnabled = false;
+  gridState.cropX = 0;
+  gridState.cropY = 0;
+  gridState.cropWidth = 300;
+  gridState.cropHeight = 300;
+
+  // Clear the file input to allow re-uploading
+  const fileInput = document.getElementById('gridImageUpload');
+  if (fileInput) {
+    fileInput.value = '';
+  }
 
   document.getElementById('uploadSection').style.display = 'block';
   document.getElementById('gridEditorSection').style.display = 'none';
@@ -3245,7 +3632,7 @@ function resetGridEditor() {
   document.getElementById('selectedCell').textContent = 'None';
   document.getElementById('gridResult').value = '';
 
-  showInfoToast('Grid editor reset');
+  showInfoToast('Grid editor reset - ready for new image');
 }
 
 // ============================================================================

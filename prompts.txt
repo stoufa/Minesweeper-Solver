@@ -204,4 +204,36 @@ i noticed i still have the "paint even after releasing the mouse button" issue, 
 --------------------------------------------------
 i still can change cells merely by hovering over them even after releasing the mouse!!
 also, make a tiny script to start a local web server to serve the webapp (to avoid cors issues with file:// protocol)
+--------------------------------------------------
+in the solver tab, when there are no certain cells (all unknowns), please compute probabilities for each cell based on the valid configurations found, and suggest the cell with the lowest probability of being a mine as the next step
+--------------------------------------------------
+i don't think this feature is implemented yet, and it even broke the solver, i get the same board as an output of the solver, this is the board i tried:
+................
+................
+................
+.........3332...
+.....!312!11!211
+...34!2011111211
+222!2110000001!1
+!111100000000111
+1100011112211221
+110001!22!!11!!1
+!100012!22212342
+1100112121101!2!
+11102!201!102231
+1!102!2022201!10
+222121101!101121
+!11!10001110001!
+--------------------------------------------------
+when i "export to board" from the visual grid editor, i want the board to be checked for validity (constraints respected)
+--------------------------------------------------
+DONE: Added automatic board constraint validation when exporting from visual grid editor. The board is now checked for validity (all numbered cells' mine count constraints are verified). If violations are found, a confirmation dialog shows the errors and asks whether to proceed. Success/warning toasts indicate if the board was valid or had violations. See CHANGELOG.md v3.5.0 for details.
+--------------------------------------------------
+the visual grid editor has a few bugs:
+- the opacity doesn't apply as soon as the image is uploaded
+- once you confirm the crop, you can't adjust it again (you should be able to hide the grid, re-do the crop, and re-show the grid)
+- when you reset and want to upload another (better) image/screenshot, it simply doesn't work (it stays in the upload image dialog)
+--------------------------------------------------
+perfect! now, i want to add another adjustment: besides giving the (row, column) coordinates of the suggested next step cell, draw them on a board so that i can easily locate them instead of counting rows and columns!
+
 
